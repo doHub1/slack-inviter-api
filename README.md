@@ -1,20 +1,20 @@
 # slack-inviter-api
 
-slackユーザのinvite履歴(あるユーザを誰がinviteしたか)をAPI経由で取得可能にする
+任意のslackユーザのinviter(対象ユーザをinviteしたユーザ)をAPI経由で取得可能にする
 
 ## 仕組み
 
-現状、slackユーザのinvite履歴をAPIで取得する方法はありません。
+現状、slackユーザのinviterをAPIで取得する方法はありません。
 
-invite履歴を確認するには、管理者アカウントでslackのwebサイトにログインして、[承認済みinvite一覧ページ](https://my.slack.com/admin/invites#accepted)を見る必要があります。
+inviterを確認するには、管理者アカウントでslackのwebサイトにログインして、[承認済みinvite一覧ページ](https://my.slack.com/admin/invites#accepted)から確認する必要があります。
 
-このプログラムはslackの承認済みinvite一覧ページをスクレイプすることで、invite履歴をAPIとして取得可能にします。
+このプログラムはslackの承認済みinvite一覧ページをスクレイプすることで、指定したユーザのinviterをAPIとして取得可能にします。
 
 ## 注意
 
 利用には管理者権限を持ったslackアカウントが必要になります。
 
-ユーザ情報が外部に漏えいしないようAPIサーバへの接続はHTTPS化することを強く推奨します。
+ユーザ情報の漏洩を防ぐためAPIサーバへの接続はHTTPS化することを強く推奨します。
 
 ## デプロイ手順
 
@@ -36,25 +36,22 @@ $ bundle install --path vendor/bundle
 
 ### 環境変数を設定
 
-管理者権限で閲覧可能となる情報であるため、API時にtoken認証を行います。
-任意のtokenを環境変数 `SECRET_TOKEN` に設定します。
+APIアクセス時にtoken認証を行うため、適当なtoken文字列を環境変数 `SECRET_TOKEN` に設定します。
 
-さらに、slackチームのチーム名(サブドメイン)を `TEAM_SUBDOMAIN` に、
-管理者権限のあるslackアカウント情報を `EMAIL` と `PASSWORD` に設定します。
+さらに、slackチームのチーム名(サブドメイン)を `TEAM_SUBDOMAIN` に、管理者権限のあるslackアカウント情報を `EMAIL` と `PASSWORD` に設定します。
 
-また、現状はslackの2要素認証を有効化したアカウントの場合には利用できません。
-
+注：現状、slackの2要素認証を有効化したアカウントは利用できません。
 
 ```
 $ export SECRET_TOKEN="xxxxxxxxxx"
 $ export TEAM_SUBDOMAIN="xxxxxx"
 $ export EMAIL="xxxx@xxx.xxx"
 $ export PASSWORD="xxxxxxxxxx"
-## Productionで動かす場合には SECRET_KEY_BASE も設定します
+## アプリケーション(Rails)をProductionで動かす場合には SECRET_KEY_BASE も設定します
 $ export SECRET_KEY_BASE="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
-適当なtokenを生成したい場合は以下のように作成できます。
+適当なtoken文字列を生成したい場合は以下のコマンドで作成できます。
 
 ```
 $ bin/rake secret
@@ -65,23 +62,23 @@ $ bin/rake secret
 ### 起動
 
 ```
-$ bin/rails server
+$ bin/rails server -b 0.0.0.0
 ```
 
 ## 使い方
 
-アクセス用トークンをAuthorizationヘッダに付加し、inviteした人を確認したいユーザのユーザIDをエンドポイントに含めてGETでアクセスします。
+自身で設定したトークンをAuthorizationヘッダに付加し、inviterを確認したいユーザのユーザIDをエンドポイントに含めてGETでAPIエンドポイントにアクセスします。
 
 対象のユーザIDが `U030GEHFM` の場合
 
 /users/U030GEHFM/inviter がエンドポイントになり、以下のように利用します。
 
 ```
-$ curl -H "Authorization: Bearer <SECRET_TOKEN>" https://example.com/users/U030GEHFM/inviter
+$ curl -H "Authorization: Bearer $SECRET_TOKEN" https://example.com/users/U030GEHFM/inviter
 {"status":200,"message":"success","inviter_id":"U030HHHBG"}
 ```
 
-レスポンス本文の `inviter_id` から、ユーザID `U030GEHFM` をinviteしたユーザのID `U030HHHBG` が取得できます。
+レスポンス本文の `inviter_id` から、ユーザID `U030GEHFM` のinviterであるユーザのID `U030HHHBG` が取得できます。
 
 
 ## 詳細
@@ -89,10 +86,6 @@ $ curl -H "Authorization: Bearer <SECRET_TOKEN>" https://example.com/users/U030G
 ### エンドポイント
 
 **GET /users/:user_id/inviter**
-
-slackのユーザIDが `U030GEHFM` の場合は
-
-**/users/U030GEHFM/inviter** をGETします
 
 ### リクエスト方法
 
@@ -144,5 +137,5 @@ $ curl -H "Authorization: Bearer $SECRET_TOKEN" https://example.com/users/INVALI
 {"status":404,"message":"user_not_found"}
 ```
 
-slackチームを作成したユーザのIDを指定した場合にも、そもそもinviteしたユーザがいないため、存在しないユーザIDを指定した場合と同様にAPIから404のレスポンスが返却されます。
+slackチームを作成したユーザのIDを指定した場合にも、そもそもinviterがいないため、存在しないユーザIDを指定した場合と同様にAPIから404のレスポンスが返却されます。
 

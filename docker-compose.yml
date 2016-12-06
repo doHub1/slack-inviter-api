@@ -1,0 +1,13 @@
+version: '2'
+services:
+  web:
+    build: .
+    environment:
+      - RAILS_ENV
+      - SECRET_TOKEN
+      - TEAM_SUBDOMAIN
+      - EMAIL
+      - PASSWORD
+      - SECRET_KEY_BASE
+    ports:
+      - "3000:3000"

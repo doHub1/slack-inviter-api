@@ -30,5 +30,7 @@ module SlackInvitationApi
     # to auto load lib/ directory
     config.autoload_paths += %W(#{config.root}/lib)
     config.eager_load_paths += %W(#{config.root}/lib)
+
+    config.exceptions_app = self.routes
   end
 end

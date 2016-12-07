@@ -1,4 +1,7 @@
 class UsersController < ApplicationController
+
+  before_action :authenticate
+
   # GET /users/:user_id/inviter
   def inviter
     user_id = params['user_id']

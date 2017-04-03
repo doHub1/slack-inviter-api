@@ -49,7 +49,7 @@ class AcceptedInvitesExporter
   end
 
   def export_inviter_id(user_id)
-    accepted_invites = page.body.scan(/boot_data.accepted_invites = (.+?);/)
+    accepted_invites = page.body.scan(/boot_data.accepted_invites = (.+?\]);/)
     invites = JSON.parse(accepted_invites[0][0])
     inviter_id = 'user_not_found'
     invites.map do |invite|

@@ -1,51 +1,22 @@
 class PrivateFilesController < ApplicationController
-  before_action :set_private_file, only: [:show, :update, :destroy]
 
-  # GET /private_files
-  def index
-    @private_files = PrivateFile.all
+  before_action :authenticate
 
-    render json: @private_files
-  end
+  # GET /private_file
+  def get_private_file
+    encoded_private_file_url = params[:url]
+    return render json: { status: 400, message: 'missing_private_file_url'}, status: :bad_request unless encoded_private_file_url
 
-  # GET /private_files/1
-  def show
-    render json: @private_file
-  end
+    exporter = PrivateFileExporter.new
+    private_file_content = exporter.get_private_file(encoded_private_file_url)
 
-  # POST /private_files
-  def create
-    @private_file = PrivateFile.new(private_file_params)
-
-    if @private_file.save
-      render json: @private_file, status: :created, location: @private_file
+    if private_file_content[:message] == 'file_not_found'
+      render json: { status: 404, message: 'file_not_found' }, status: :not_found
     else
-      render json: @private_file.errors, status: :unprocessable_entity
+      private_file_content[:status] = 200
+      render json: private_file_content, status: :ok
     end
+  rescue => error
+    render json: { status: 500, message: error.message }, status: :internal_server_error
   end
-
-  # PATCH/PUT /private_files/1
-  def update
-    if @private_file.update(private_file_params)
-      render json: @private_file
-    else
-      render json: @private_file.errors, status: :unprocessable_entity
-    end
-  end
-
-  # DELETE /private_files/1
-  def destroy
-    @private_file.destroy
-  end
-
-  private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_private_file
-      @private_file = PrivateFile.find(params[:id])
-    end
-
-    # Only allow a trusted parameter "white list" through.
-    def private_file_params
-      params.fetch(:private_file, {})
-    end
 end

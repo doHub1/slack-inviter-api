@@ -85,7 +85,7 @@ $ curl -H "Authorization: Bearer $SECRET_TOKEN" https://example.com/users/U030GE
 
 ### エンドポイント
 
-**GET /users/:user_id/inviter**
+### **GET /users/:user_id/inviter**
 
 ### リクエスト方法
 
@@ -112,9 +112,49 @@ jsonでレスポンス本文が返却されます
 |inviter_id|string|inviterのID(取得できなかった場合は要素無し)|
 
 
-### サンプル
+### **GET /private_file**
 
-https://example.com/ にAPIサーバが起動しており、対象の `user_id` が `U030GEHFM` の場合
+### リクエスト方法
+
+|リクエストメソッド/ヘッダ|値|
+|:---------------------|:-|
+|Method                |GET|
+|Authorization         |Bearer <SECRET_TOKEN>|
+
+### リクエストパラメータ
+
+|パラメータ名  |必須 |型    |説明|
+|:-----------|:---|:-----|:--|
+|url         |必須 |String|URLエンコードした対象ファイルのURL|
+
+### レスポンス
+
+|レスポンスヘッダ|値|
+|:-------------|:-|
+|status        |200: 成功<br>400: リクエストが不正<br>401: トークンが無効<br>404: ファイルが見つからない<br>500: サーバ内エラー|
+|Content-Type  |application/json|
+
+### レスポンス本文
+
+jsonでレスポンス本文が返却されます
+
+|name                |type  |value description|
+|:-------------------|:-----|:----------------|
+|status              |number|HTTP ステータスコードに準拠した値<br>200: 成功<br>400: リクエストが不正<br>401: トークンが無効<br>404: ファイルが見つからない<br>500: サーバ内エラー|
+|message             |string|レスポンス内容を表すメッセージ|
+|filename            |string|ファイル名 (ファイル取得できなかった場合は要素無し)|
+|content_type        |string|content-type (ファイル取得できなかった場合は要素無し)|
+|content_length      |string|content-length (ファイル取得できなかった場合は要素無し)|
+|private_file_base64 |string|ファイルをBase64でエンコードした文字列 (ファイル取得できなかった場合は要素無し)|
+
+
+## サンプル
+
+以下では、 `https://example.com/` にAPIサーバが起動している前提です。
+
+### **GET /users/:user_id/inviter**
+
+対象の `user_id` が `U030GEHFM` の場合
 
 #### 正常処理
 
@@ -139,3 +179,55 @@ $ curl -H "Authorization: Bearer $SECRET_TOKEN" https://example.com/users/INVALI
 
 slackチームを作成したユーザのIDを指定した場合にも、そもそもinviterがいないため、存在しないユーザIDを指定した場合と同様にAPIから404のレスポンスが返却されます。
 
+
+### **GET /private_file**
+
+対象のファイルURLが `https://files.slack.com/files-pri/T0XA0BD64-D4HD29HD5/example.png` の場合
+
+(URLをBase64エンコードした文字列は `https%3A%2F%2Ffiles.slack.com%2Ffiles-pri%2FT0XA0BD64-D4HD29HD5%2Fexample.png` となる)
+
+#### 正常処理
+
+```
+$ curl -sH "Authorization: Bearer $SECRET_TOKEN" https://example.com/private_file?url=https%3A%2F%2Ffiles.slack.com%2Ffiles-pri%2FT0XA0BD64-D4HD29HD5%2Fexample.png | jq .
+{
+  "message": "ok",
+  "filename": "example.png",
+  "content_type": "image/png",
+  "content_length": "12164",
+  "private_file_base64": "...",
+  "status": 200
+}
+```
+
+※ base64エンコードしたファイル内容は省略
+
+#### トークンが不正な場合
+
+```
+$ curl -sH "Authorization: Bearer $INVALID_TOKEN" https://example.com/private_file?url=https%3A%2F%2Ffiles.slack.com%2Ffiles-pri%2FT0XA0BD64-D4HD29HD5%2Fexample.png | jq .
+{
+  "status": 401,
+  "message": "invalid_token"
+}
+```
+
+#### urlパラメータが無い場合
+
+```
+$ curl -sH "Authorization: Bearer $SECRET_TOKEN" localhost:3000/private_file | jq .
+{
+  "status": 400,
+  "message": "missing_private_file_url"
+}
+```
+
+#### ファイルが存在しない場合
+
+```
+$ curl -sH "Authorization: Bearer $SECRET_TOKEN" https://example.com/private_file?url=https%3A%2F%2Ffiles.slack.com%2Ffiles-pri%2FT0XA0BD64-D4HD29HD5%2Fnot_exist.png | jq .
+{
+  "status": 404,
+  "message": "file_not_found"
+}
+```

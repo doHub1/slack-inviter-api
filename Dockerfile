@@ -1,4 +1,4 @@
-FROM ruby:2.4.1
+FROM ruby:2.4.2
 MAINTAINER knjcode <knjcode@gmail.com>
 WORKDIR /usr/src/app
 COPY Gemfile* ./

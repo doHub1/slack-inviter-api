@@ -1,4 +1,4 @@
-# slack-inviter-api
+ # slack-inviter-api
 
 任意のslackユーザのinviter(対象ユーザをinviteしたユーザ)をAPI経由で取得可能にする
 
@@ -30,7 +30,7 @@ Ruby 2.2.2 以上が必要です。
 
 ```
 $ cd slack-inviter-api
-$ gem install bundler
+$ sudo gem install bundler
 $ bundle install --path vendor/bundle
 ```
 
@@ -60,24 +60,33 @@ $ bin/rake secret
 コマンド実行後に出力された値を環境変数に設定します。
 
 ### 起動
-
+※デフォルトだとポート3000番で起動します。
 ```
 $ bin/rails server -b 0.0.0.0
+
+=> Booting Puma
+=> Rails 5.0.6 application starting in development on http://0.0.0.0:3000
+=> Run `rails server -h` for more startup options
+Puma starting in single mode...
+* Version 3.11.3 (ruby 2.2.6-p396), codename: Love Song
+* Min threads: 5, max threads: 5
+* Environment: development
+* Listening on tcp://0.0.0.0:3000
+Use Ctrl-C to stop
 ```
 
 ## 使い方
 
 自身で設定したトークンをAuthorizationヘッダに付加し、inviterを確認したいユーザのユーザIDをエンドポイントに含めてGETでAPIエンドポイントにアクセスします。
 
-対象のユーザIDが `U030GEHFM` の場合
-
-/users/U030GEHFM/inviter がエンドポイントになり、以下のように利用します。
-
+対象のユーザIDが `U030GEHFM` の場合 `/users/U030GEHFM/inviter` がエンドポイントになり、以下のように利用します。<br>
+(サーバが http://0.0.0.0:3000 で起動している場合)
 ```
-$ curl -H "Authorization: Bearer $SECRET_TOKEN" https://example.com/users/U030GEHFM/inviter
-{"status":200,"message":"success","inviter_id":"U030HHHBG"}
-```
+$ curl -H "Authorization: Bearer $SECRET_TOKEN" http://0.0.0.0:3000/users/U030GEHFM/inviter
 
+=> {"status":200,"message":"success","inviter_id":"U030HHHBG"}
+```
+※10秒程度かかるので気長に待つ。<br>
 レスポンス本文の `inviter_id` から、ユーザID `U030GEHFM` のinviterであるユーザのID `U030HHHBG` が取得できます。
 
 

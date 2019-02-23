@@ -63,6 +63,7 @@ $ bin/rake secret
 
 ```
 $ bin/rails server -b 0.0.0.0
+-> $ bin/rails server --binding=localhost --port=23456 --daemon
 ```
 
 ## 使い方
